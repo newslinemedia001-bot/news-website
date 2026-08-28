@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard | Newsight</title><link rel="stylesheet" href="/legacy/style.css">
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+</head>
+<body class="dashboard-page">
+<header class="dashboard-header"><a class="brand" href="/"><img src="https://newsight.co.ke/assets/logo/logo.png" alt="Newsight"></a><div class="dashboard-header-right"><span id="adminEmail"></span><a href="/dashboard.html">My dashboard</a><a href="/">Newsight</a><button id="logoutBtn" class="outline-button" type="button">Sign out</button></div></header>
+<main class="container dashboard-wrap">
+<div class="dashboard-intro"><div><h1>Admin dashboard</h1><p>Manage posts, users, approvals and publisher roles.</p></div></div>
+<div id="adminMessage" class="dashboard-message hidden" role="status" aria-live="polite"></div>
+<section class="admin-section"><div class="section-heading"><h2>Pending approvals</h2><span id="pendingCount">0</span></div><div id="pendingPosts"></div></section>
+<section class="admin-section"><div class="section-heading"><h2>All posts</h2><span>Manage</span></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Author</th><th>Status</th><th>Category</th><th>Actions</th></tr></thead><tbody id="postsTable"></tbody></table></div></section>
+<section class="admin-section"><div class="section-heading"><h2>Users</h2><span>Roles & accounts</span></div>
+<form id="addUserForm" class="editor-panel"><h3>Add user</h3><div class="form-grid"><label>Full name<input id="newUserName" required></label><label>Email<input id="newUserEmail" type="email" required></label><label>Temporary password<input id="newUserPassword" type="password" minlength="6" required></label><label>Role<select id="newUserRole"><option value="user">User</option><option value="author">Author</option><option value="admin">Admin</option></select></label></div><button class="primary-button" type="submit">Create user</button></form>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead><tbody id="usersTable"></tbody></table></div></section>
+</main><script type="module" src="/legacy/admin.js"></script>
+</body></html>

@@ -49,13 +49,46 @@ function formatDate(value?: string) {
 }
 
 function safeRssHtml(value = "") {
-  // RSS publishers may provide HTML. Remove executable elements and inline handlers
-  // before rendering it so the article route does not turn feed content into script.
   return String(value)
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
     .replace(/javascript:/gi, "");
+}
+
+function decodeHtml(value = "") {
+  return String(value)
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#039;/gi, "'")
+    .replace(/&#39;/gi, "'");
+}
+
+function renderCommunityContent(value = "") {
+  // Preserve the author's paragraphs and line breaks. Supabase content may be
+  // plain text with CRLF/LF newlines, or HTML copied from the editor.
+  const raw = decodeHtml(String(value)).replace(/\r\n?/g, "\n");
+
+  if (/<(?:p|div|br|h[1-6]|ul|ol|li|blockquote|pre)[\s>]/i.test(raw)) {
+    return (
+      <div dangerouslySetInnerHTML={{ __html: safeRssHtml(raw) }} />
+    );
+  }
+
+  return raw.split(/\n{2,}/).map((paragraph, index) => {
+    const lines = paragraph.split("\n");
+    return (
+      <p key={index}>
+        {lines.map((line, lineIndex) => (
+          <span key={lineIndex}>
+            {line}
+            {lineIndex < lines.length - 1 && <br />}
+          </span>
+        ))}
+      </p>
+    );
+  });
 }
 
 export default function ArticleClient({ article }: { article: Article | null }) {
@@ -103,9 +136,7 @@ export default function ArticleClient({ article }: { article: Article | null }) 
 
         <div className="article-content">
           {article.kind === "community" ? (
-            clean(content).split(/\r?\n/).map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))
+            renderCommunityContent(content)
           ) : (
             <div dangerouslySetInnerHTML={{ __html: safeRssHtml(content) }} />
           )}

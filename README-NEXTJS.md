@@ -52,3 +52,12 @@ The anon key is suitable for browser use when your Supabase Row Level Security p
 ## Existing dashboard/auth
 
 The existing dashboard, login and signup scripts are kept under `public/legacy`. The homepage and article page use the same existing UI markup and client scripts, so this is a migration rather than a complete rewrite of your frontend.
+
+
+## Roles, approvals and admin dashboard
+
+Run `supabase/roles-and-approvals.sql` in the Supabase SQL Editor. The migration adds `users.role` (`user`, `author`, `admin`) and `news.approval_status`. Regular users can submit stories, but their stories are saved as drafts with `approval_status = pending` and therefore do not appear on the public homepage. Authors and admins publish immediately.
+
+The admin dashboard is available at `/admin.html`. It uses secure Next.js server routes and therefore uses `SUPABASE_SERVICE_ROLE_KEY` from `app/config/server-config.ts`. Replace the placeholder in that file before deployment. The key is still server-only: never import that config into browser/client code.
+
+After running the migration, promote your first administrator with the SQL statement shown at the bottom of the migration file.

@@ -21,6 +21,12 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+function slugify(value = "") {
+  const normalized = String(value).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").replace(/-+/g, "-");
+  return normalized.slice(0, 90).replace(/-+$/g, "") || "news";
+}
+function articleUrl(kind, id, title) { return `/news/${encodeURIComponent(kind)}/${encodeURIComponent(id)}/${slugify(title || "news")}`; }
+
 function articleId(item) {
   return btoa(
     unescape(encodeURIComponent(item.guid || item.link || item.title)),
@@ -164,7 +170,7 @@ async function renderRecent() {
     .slice(0, 8)
     .map(
       (story) => `
-    <a class="recent-item" href="/article?kind=rss&id=${encodeURIComponent(articleId(story))}">
+    <a class="recent-item" href="${articleUrl("rss", articleId(story), story.title)}">
       <strong>${escapeHtml(story.title)}</strong>
       <span>${escapeHtml(story.sourceName)}</span>
     </a>

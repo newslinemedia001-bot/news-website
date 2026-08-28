@@ -12,6 +12,26 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const description = metadata.description || "Stay informed with the latest news from Kenya and around the world.";
   const og = metadata.openGraph;
   const image = typeof og?.images?.[0] === "string" ? og.images[0] : og?.images?.[0]?.url || "https://newsight.co.ke/assets/logo/logo_icon.png";
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://newsight.co.ke/#organization",
+        name: "Newsight",
+        url: "https://newsight.co.ke/",
+        logo: { "@type": "ImageObject", url: "https://newsight.co.ke/assets/logo/logo_icon.png" },
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://newsight.co.ke/#website",
+        url: "https://newsight.co.ke/",
+        name: "Newsight",
+        publisher: { "@id": "https://newsight.co.ke/#organization" },
+        inLanguage: "en-KE",
+      },
+    ],
+  };
 
   return (
     <html lang="en">
@@ -32,6 +52,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={image} />
         <link rel="canonical" href="https://newsight.co.ke/" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
         <link rel="icon" href="https://newsight.co.ke/assets/logo/logo_icon.png" />
       </head>
       <body>{children}</body>

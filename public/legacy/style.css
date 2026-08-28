@@ -1016,3 +1016,15 @@ select {
 
 /* Utility state used by the authentication and dashboard pages. */
 .hidden { display: none !important; }
+.hidden { display: none !important; }
+.form-hint { margin: 0.35rem 0 1rem; font-size: 0.9rem; opacity: 0.75; }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th, .admin-table td { padding: 0.75rem; border-bottom: 1px solid rgba(0,0,0,.1); text-align: left; vertical-align: middle; }
+.admin-table select, .admin-table input { min-width: 120px; }
+.admin-tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.admin-tab { cursor: pointer; }
+.admin-section { margin-bottom: 2rem; }
+.status.pending { background: #fff2cc; }
+.status.published { background: #d9f7e8; }
+.status.draft { background: #eee; }

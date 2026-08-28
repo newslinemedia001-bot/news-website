@@ -42,31 +42,13 @@ const SITE_URL = "https://newsight.co.ke/";
 ========================================================= */
 
 const RSS_SOURCES = [
-  [
-    "The Standard Kenya",
-    "https://www.standardmedia.co.ke/rss/kenya.php",
-    "https://www.standardmedia.co.ke",
-  ],
-  [
-    "Kenya News Agency",
-    "https://www.kenyanews.go.ke/feed/",
-    "https://www.kenyanews.go.ke",
-  ],
-  [
-    "KBC Digital",
-    "https://www.kbc.co.ke/feed/",
-    "https://www.kbc.co.ke",
-  ],
-  [
-    "K24 Digital",
-    "https://k24.digital/feed",
-    "https://k24.digital",
-  ],
-  [
-    "BBC News Kenya",
-    "https://feeds.bbci.co.uk/news/topics/c40rjmqdlzzt/rss.xml",
-    "https://www.bbc.com/news/topics/c40rjmqdlzzt",
-  ],
+  ["The Standard Kenya", "https://www.standardmedia.co.ke/rss/kenya.php", "https://www.standardmedia.co.ke"],
+  ["Kenya News Agency", "https://www.kenyanews.go.ke/feed/", "https://www.kenyanews.go.ke"],
+  ["KBC Digital", "https://www.kbc.co.ke/feed/", "https://www.kbc.co.ke"],
+  ["K24 Digital", "https://k24.digital/feed", "https://k24.digital"],
+  ["BBC News Kenya", "https://feeds.bbci.co.uk/news/topics/c40rjmqdlzzt/rss.xml", "https://www.bbc.com/news/topics/c40rjmqdlzzt"],
+  ["Tukio", "https://tukio.co.ke/feed/", "https://tukio.co.ke"],
+  ["Capital FM Kenya", "https://www.capitalfm.co.ke/news/feed/", "https://www.capitalfm.co.ke/news"],
 ] as const;
 
 /* =========================================================

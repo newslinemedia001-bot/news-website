@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Keep legacy URLs working while the Next.js app becomes the canonical site.
+# Do not add a catch-all rewrite: Netlify warns that root-level rewrites can
+# override Next.js Runtime routing.
+
+[build.environment]
+  NODE_VERSION = "20"

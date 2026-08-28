@@ -161,12 +161,28 @@ async function loadCommunityStories() {
   );
 }
 
+function slugify(value = "") {
+  const normalized = String(value)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-");
+  return normalized.slice(0, 90).replace(/-+$/g, "") || "news";
+}
+
+function articleUrl(kind, id, title) {
+  return `/news/${encodeURIComponent(kind)}/${encodeURIComponent(id)}/${slugify(title || "news")}`;
+}
+
 function communityUrl(item) {
-  return `/article?kind=community&id=${encodeURIComponent(item.id)}`;
+  return articleUrl("community", item.id, item.title);
 }
 
 function rssUrl(item) {
-  return `/article?kind=rss&id=${encodeURIComponent(rssId(item))}`;
+  return articleUrl("rss", rssId(item), item.title);
 }
 
 function card(item) {
