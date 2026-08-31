@@ -266,8 +266,7 @@ async function updateAuthArea() {
     });
   } else {
     area.innerHTML = `
-      <a href="/login.html" class="sign-in">Sign in</a>
-      <a href="/signup.html" class="sign-up">Sign up</a>`;
+      <a href="/login.html" class="sign-in">Sign in</a>`;
   }
 }
 
