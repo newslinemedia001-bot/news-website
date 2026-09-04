@@ -1,4 +1,4 @@
-import { getNewsSitemapStories, articlePath } from "../../seo";
+import { getNewsSitemapStories, articlePath } from "../seo";
 
 const SITE_URL = "https://newsight.co.ke";
 const MAX_NEWS_URLS = 1000;
