@@ -10,5 +10,7 @@
  * routes.
  */
 export const SUPABASE_URL = "https://kdmbspupunfrwkvcosov.supabase.co";
-export const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-export const SUPABASE_SERVICE_ROLE_KEY = "PASTE_YOUR_SUPABASE_SERVICE_ROLE_KEY_HERE";
+export const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbWJzcHVwdW5mcndrdmNvc292Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzY2MTM4NCwiZXhwIjoyMTAzMjM3Mzg0fQ.rHPWKBoFxOXhQ-_OAgLj_EqfY12D0Od-cDI7FoWdzCY";
+export const SUPABASE_SERVICE_ROLE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbWJzcHVwdW5mcndrdmNvc292Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzY2MTM4NCwiZXhwIjoyMTAzMjM3Mzg0fQ.rHPWKBoFxOXhQ-_OAgLj_EqfY12D0Od-cDI7FoWdzCY";
