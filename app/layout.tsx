@@ -55,6 +55,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
         <link rel="icon" href="https://newsight.co.ke/assets/logo/logo_icon.png" />
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5672747362546507"
+          crossOrigin="anonymous"
+        />
       </head>
       <body>{children}</body>
     </html>
