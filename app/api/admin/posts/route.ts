@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminHeaders, requireAdmin } from "../_auth";
+import { adminHeaders, requireAdmin, AdminAuthError } from "../_auth";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kdmbspupunfrwkvcosov.supabase.co";
 
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/news?select=*&order=created_at.desc`, { headers: adminHeaders(), cache: "no-store" });
     if (!response.ok) throw new Error(await response.text());
     return NextResponse.json(await response.json());
-  } catch (e) { return errorResponse(e, 403); }
+  } catch (e) { return errorResponse(e, e instanceof AdminAuthError ? e.status : 400); }
 }
 
 export async function PATCH(request: NextRequest) {

@@ -2,6 +2,26 @@ import { supabase } from "./supabase.js";
 
 const $ = (id) => document.getElementById(id);
 let accessToken = "";
+
+async function setFreshSession() {
+  let { data, error } = await supabase.auth.getSession();
+  if (error) return null;
+  if (!data.session) return null;
+
+  // Refresh an expired/near-expiry browser session before calling the
+  // Next.js admin APIs. This prevents stale access tokens from producing a
+  // misleading 401 after the dashboard has been left open for a while.
+  const expiresAt = Number(data.session.expires_at || 0);
+  if (expiresAt && expiresAt <= Math.floor(Date.now() / 1000) + 30) {
+    const refreshed = await supabase.auth.refreshSession();
+    if (refreshed.error || !refreshed.data.session) return null;
+    data = refreshed.data;
+  }
+
+  accessToken = data.session.access_token;
+  return data.session;
+}
+
 let posts = [];
 let users = [];
 
@@ -43,9 +63,8 @@ $("addUserForm").addEventListener("submit", async e => { e.preventDefault(); try
 $("logoutBtn").addEventListener("click", async () => { await supabase.auth.signOut(); window.location.href = "/"; });
 
 (async function init() {
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) { window.location.href = "/login.html"; return; }
-  accessToken = data.session.access_token;
-  $("adminEmail").textContent = data.session.user.email || "";
+  const session = await setFreshSession();
+  if (!session) { window.location.href = "/login.html"; return; }
+  $("adminEmail").textContent = session.user.email || "";
   try { await refresh(); } catch (e) { msg(e.message, true); if (e.message.toLowerCase().includes("admin")) setTimeout(() => window.location.href = "/dashboard.html", 1200); }
 })();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminHeaders, requireAdmin } from "../_auth";
+import { adminHeaders, requireAdmin, AdminAuthError } from "../_auth";
 import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "../../../config/server-config";
 
 const SERVICE_KEY = SUPABASE_SERVICE_ROLE_KEY;
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/users?select=id,full_name,email,role,created_at&order=created_at.desc`, { headers: adminHeaders(), cache: "no-store" });
     if (!response.ok) throw new Error(await response.text());
     return NextResponse.json(await response.json());
-  } catch (e) { return errorResponse(e, e instanceof Error && e.message.includes("Admin access") ? 403 : 401); }
+  } catch (e) { return errorResponse(e, e instanceof AdminAuthError ? e.status : 400); }
 }
 
 export async function POST(request: NextRequest) {
@@ -31,7 +31,13 @@ export async function POST(request: NextRequest) {
     const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
       method: "POST",
       headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, email_confirm: true, user_metadata: { full_name } }),
+      body: JSON.stringify({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name },
+        app_metadata: { role },
+      }),
     });
     const authData = await authResponse.json();
     if (!authResponse.ok) {
@@ -72,8 +78,17 @@ export async function PATCH(request: NextRequest) {
     if (full_name !== undefined) payload.full_name = full_name;
     const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", headers: { ...adminHeaders(), Prefer: "return=representation" }, body: JSON.stringify(payload) });
     if (!response.ok) throw new Error(await response.text());
+
+    // Keep the server-managed Auth role in sync with the public profile.
+    const authUpdate = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ app_metadata: { role } }),
+    });
+    if (!authUpdate.ok) throw new Error(await authUpdate.text());
+
     return NextResponse.json((await response.json())?.[0] || {});
-  } catch (e) { return errorResponse(e, 400); }
+  } catch (e) { return errorResponse(e, e instanceof AdminAuthError ? e.status : 400); }
 }
 
 export async function DELETE(request: NextRequest) {
