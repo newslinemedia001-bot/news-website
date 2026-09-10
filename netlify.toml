@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Explicitly enable Netlify's Next.js runtime. This is compatible with
+# Next.js 13.5+ and ensures App Router pages, SSR, route handlers and
+# dynamic routes are deployed as Netlify Functions/Edge infrastructure.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
