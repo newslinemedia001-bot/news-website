@@ -47,7 +47,6 @@ select {
 .site-header {
   background: #fff;
   border-bottom: 1px solid #e2e6ed;
-  position: sticky;
   top: 0;
   z-index: 50
 }
