@@ -1,4 +1,6 @@
 
+import { fetchRssItems } from "./rss";
+
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
   "https://kdmbspupunfrwkvcosov.supabase.co";
@@ -7,19 +9,8 @@ const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbWJzcHVwdW5mcndrdmNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjEzODQsImV4cCI6MjEwMzIzNzM4NH0.FG02U5z3cxdsdmEctL3HM1jmEjri-OQndFymfjhQ1NA";
 
-const RSS_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const FALLBACK_IMAGE = "https://newsight.co.ke/assets/logo/logo.png";
 export const SITE_URL = "https://newsight.co.ke";
-
-const RSS_SOURCES = [
-  ["The Standard Kenya", "https://www.standardmedia.co.ke/rss/kenya.php", "https://www.standardmedia.co.ke"],
-  ["Kenya News Agency", "https://www.kenyanews.go.ke/feed/", "https://www.kenyanews.go.ke"],
-  ["KBC Digital", "https://www.kbc.co.ke/feed/", "https://www.kbc.co.ke"],
-  ["K24 Digital", "https://k24.digital/feed", "https://k24.digital"],
-  ["BBC News Kenya", "https://feeds.bbci.co.uk/news/topics/c40rjmqdlzzt/rss.xml", "https://www.bbc.com/news/topics/c40rjmqdlzzt"],
-  ["Tukio", "https://tukio.co.ke/feed/", "https://tukio.co.ke"],
-  ["Capital FM Kenya", "https://www.capitalfm.co.ke/news/feed/", "https://www.capitalfm.co.ke/news"],
-] as const;
 
 type Article = {
   id?: string;
@@ -88,32 +79,13 @@ function hasImage(item?: Article | null): boolean {
 }
 
 async function loadRss(): Promise<Article[]> {
-  const results = await Promise.allSettled(
-    RSS_SOURCES.map(async ([name, feed, site]) => {
-      const response = await fetch(RSS_API + encodeURIComponent(feed), {
-        next: { revalidate: 600 },
-      });
-
-      if (!response.ok) throw new Error(`${name}: RSS request failed`);
-
-      const data = await response.json();
-      if (data.status !== "ok") throw new Error(`${name}: RSS API failed`);
-
-      return (data.items || []).map((item: Article) => ({
-        ...item,
-        id: rssId(item),
-        kind: "rss" as const,
-        sourceName: name,
-        sourceSite: site,
-        originalUrl: item.link,
-        pubDate: item.pubDate || "",
-      }));
-    }),
-  );
-
-  const stories = results
-    .filter((result): result is PromiseFulfilledResult<Article[]> => result.status === "fulfilled")
-    .flatMap((result) => result.value);
+  const stories: Article[] = (await fetchRssItems()).map((item) => ({
+    ...item,
+    id: rssId(item),
+    kind: "rss" as const,
+    originalUrl: item.link,
+    pubDate: item.pubDate || "",
+  }));
 
   const seen = new Set<string>();
   return stories

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { Metadata } from "next";
 import HomeClient from "./HomeClient";
+import { fetchRssItems } from "./rss";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +17,6 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbWJzcHVwdW5mcndrdmNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjEzODQsImV4cCI6MjEwMzIzNzM4NH0.FG02U5z3cxdsdmEctL3HM1jmEjri-OQndFymfjhQ1NA";
-
-const RSS_API =
-  "https://api.rss2json.com/v1/api.json?rss_url=";
 
 /*
  * This image is ONLY used when the featured story
@@ -38,20 +36,6 @@ const FAVICON =
  * Your production homepage.
  */
 const SITE_URL = "https://newsight.co.ke/";
-
-/* =========================================================
-   RSS SOURCES
-========================================================= */
-
-const RSS_SOURCES = [
-  ["The Standard Kenya", "https://www.standardmedia.co.ke/rss/kenya.php", "https://www.standardmedia.co.ke"],
-  ["Kenya News Agency", "https://www.kenyanews.go.ke/feed/", "https://www.kenyanews.go.ke"],
-  ["KBC Digital", "https://www.kbc.co.ke/feed/", "https://www.kbc.co.ke"],
-  ["K24 Digital", "https://k24.digital/feed", "https://k24.digital"],
-  ["BBC News Kenya", "https://feeds.bbci.co.uk/news/topics/c40rjmqdlzzt/rss.xml", "https://www.bbc.com/news/topics/c40rjmqdlzzt"],
-  ["Tukio", "https://tukio.co.ke/feed/", "https://tukio.co.ke"],
-  ["Capital FM Kenya", "https://www.capitalfm.co.ke/news/feed/", "https://www.capitalfm.co.ke/news"],
-] as const;
 
 /* =========================================================
    TYPES
@@ -147,70 +131,11 @@ function hasImage(item?: Story | null): boolean {
 ========================================================= */
 
 async function loadRss(): Promise<Story[]> {
-  const results = await Promise.allSettled(
-    RSS_SOURCES.map(
-      async ([name, feed, site]): Promise<Story[]> => {
-        const response = await fetch(
-          RSS_API + encodeURIComponent(feed),
-          {
-            /*
-             * Cache for 10 minutes.
-             */
-            next: {
-              revalidate: 600,
-            },
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `RSS request failed: ${name}`,
-          );
-        }
-
-        const data = await response.json();
-
-        if (data.status !== "ok") {
-          throw new Error(
-            `RSS API failed: ${name}`,
-          );
-        }
-
-        return (data.items || []).map(
-          (item: any): Story => ({
-            ...item,
-
-            kind: "rss",
-
-            sourceName: name,
-
-            sourceSite: site,
-
-            pubDate:
-              item.pubDate ||
-              item.pubdate ||
-              item.published ||
-              item.date ||
-              "",
-          }),
-        );
-      },
-    ),
-  );
-
   /*
-   * Keep only successful feeds.
+   * Fetch every publisher feed directly (see ./rss). Sources that
+   * fail are skipped, so one broken feed cannot blank out the site.
    */
-  const stories = results
-    .filter(
-      (
-        result,
-      ): result is PromiseFulfilledResult<Story[]> =>
-        result.status === "fulfilled",
-    )
-    .flatMap(
-      (result) => result.value,
-    );
+  const stories: Story[] = await fetchRssItems();
 
   /*
    * Remove duplicate RSS stories.

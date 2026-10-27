@@ -2,15 +2,22 @@ import { supabase } from "./supabase.js";
 
 const RSS_SOURCES = [
   { name: "The Standard Kenya", feed: "https://www.standardmedia.co.ke/rss/kenya.php", site: "https://www.standardmedia.co.ke" },
-  { name: "Kenya News Agency", feed: "https://www.kenyanews.go.ke/feed/", site: "https://www.kenyanews.go.ke" },
-  { name: "KBC Digital", feed: "https://www.kbc.co.ke/feed/", site: "https://www.kbc.co.ke" },
+  { name: "Capital FM Business", feed: "https://www.capitalfm.co.ke/business/feed/", site: "https://www.capitalfm.co.ke/business" },
+  { name: "The Star Kenya", feed: "https://www.thestar.co.ke/feed/", site: "https://www.thestar.co.ke" },
   { name: "K24 Digital", feed: "https://k24.digital/feed", site: "https://k24.digital" },
   { name: "BBC News Kenya", feed: "https://feeds.bbci.co.uk/news/topics/c40rjmqdlzzt/rss.xml", site: "https://www.bbc.com/news/topics/c40rjmqdlzzt" },
-  { name: "Tukio", feed: "https://tukio.co.ke/feed/", site: "https://tukio.co.ke" },
+  { name: "Capital FM Sports", feed: "https://www.capitalfm.co.ke/sports/feed/", site: "https://www.capitalfm.co.ke/sports" },
+  { name: "Standard Entertainment", feed: "https://www.standardmedia.co.ke/rss/entertainment.php", site: "https://www.standardmedia.co.ke" },
   { name: "Capital FM Kenya", feed: "https://www.capitalfm.co.ke/news/feed/", site: "https://www.capitalfm.co.ke/news" },
 ];
 
-const RSS_API = "https://api.rss2json.com/v1/api.json?rss_url=";
+/*
+ * Feeds are parsed server-side by `/api/rss`. rss2json.com used to do
+ * this job but now answers with a Cloudflare bot challenge (403), and
+ * the publisher feeds themselves have no CORS headers, so the browser
+ * cannot fetch them directly.
+ */
+const RSS_API = "/api/rss";
 const REFRESH_MS = 10 * 60 * 1000;
 const BREAKING_INTERVAL_MS = 5 * 1000;
 let breakingTimer = null;
@@ -89,31 +96,23 @@ function rssId(item) {
     .replaceAll("=", "");
 }
 
-async function fetchRssSource(source) {
-  const response = await fetch(RSS_API + encodeURIComponent(source.feed));
+async function loadRssStories() {
+  const response = await fetch(RSS_API);
 
-  if (!response.ok) throw new Error(source.name);
+  if (!response.ok) throw new Error("RSS request failed");
 
   const data = await response.json();
 
   if (data.status !== "ok") {
-    throw new Error(source.name);
+    throw new Error("RSS request failed");
   }
 
-  return (data.items || []).map((item) => ({
+  const stories = (data.items || []).map((item) => ({
     ...item,
     kind: "rss",
-    sourceName: source.name,
-    sourceSite: source.site,
+    sourceName: item.sourceName,
+    sourceSite: item.sourceSite,
   }));
-}
-
-async function loadRssStories() {
-  const results = await Promise.allSettled(RSS_SOURCES.map(fetchRssSource));
-
-  const stories = results
-    .filter((result) => result.status === "fulfilled")
-    .flatMap((result) => result.value);
 
   const seen = new Set();
 
@@ -214,9 +213,20 @@ function card(item) {
     </article>`;
 }
 
+/*
+ * Sources that are entertainment verticals: their headlines rarely
+ * contain the keywords below, so classify them by source instead of
+ * leaving the entertainment grid empty.
+ */
+const ENTERTAINMENT_SOURCES = new Set(["Standard Entertainment"]);
+
 function classify(item) {
   if (item.kind === "community") {
     return (item.category || "Kenya").toLowerCase();
+  }
+
+  if (ENTERTAINMENT_SOURCES.has(item.sourceName)) {
+    return "entertainment";
   }
 
   const text =

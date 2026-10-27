@@ -1,20 +1,10 @@
 import type { Metadata } from "next";
+import { fetchRssItems } from "./rss";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kdmbspupunfrwkvcosov.supabase.co";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbWJzcHVwdW5mcndrdmNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjEzODQsImV4cCI6MjEwMzIzNzM4NH0.FG02U5z3cxdsdmEctL3HM1jmEjri-OQndFymfjhQ1NA";
-const RSS_API = "https://api.rss2json.com/v1/api.json?rss_url=";
 export const SITE_URL = "https://newsight.co.ke";
 const FALLBACK_IMAGE = "https://newsight.co.ke/assets/logo/logo_icon.png";
-
-export const RSS_SOURCES = [
-  ["The Standard Kenya", "https://www.standardmedia.co.ke/rss/kenya.php"],
-  ["Kenya News Agency", "https://www.kenyanews.go.ke/feed/"],
-  ["KBC Digital", "https://www.kbc.co.ke/feed/"],
-  ["K24 Digital", "https://k24.digital/feed"],
-  ["BBC News Kenya", "https://feeds.bbci.co.uk/news/topics/c40rjmqdlzzt/rss.xml"],
-  ["Tukio", "https://tukio.co.ke/feed/"],
-  ["Capital FM Kenya", "https://www.capitalfm.co.ke/news/feed/"],
-] as const;
 
 type Story = {
   id?: string | number;
@@ -91,22 +81,10 @@ export function articlePath(kind: "rss" | "community", id: string, title: string
 }
 
 async function getRssStories(): Promise<Story[]> {
-  const results = await Promise.allSettled(RSS_SOURCES.map(async ([name, feed]) => {
-    const response = await fetch(RSS_API + encodeURIComponent(feed), { next: { revalidate: 300 } });
-    if (!response.ok) throw new Error(`RSS failed: ${name}`);
-    const data = await response.json();
-    if (data.status !== "ok") throw new Error(`RSS failed: ${name}`);
-    return (data.items || []).map((item: any) => ({
-      ...item,
-      kind: "rss" as const,
-      sourceName: name,
-      pubDate: item.pubDate || item.pubdate || item.published || item.date || "",
-    }));
-  }));
+  const stories: Story[] = await fetchRssItems();
 
   const seen = new Set<string>();
-  return results
-    .flatMap((result) => result.status === "fulfilled" ? result.value : [])
+  return stories
     .filter(hasImage)
     .filter((story) => {
       const key = story.guid || story.link || story.title;
