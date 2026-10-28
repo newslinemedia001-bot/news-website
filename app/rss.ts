@@ -8,6 +8,8 @@
  * which removes the third-party dependency entirely.
  ========================================================= */
 
+import { archiveRssItems } from "./rss-store";
+
 export const RSS_SOURCES = [
   ["The Standard Kenya", "https://www.standardmedia.co.ke/rss/kenya.php", "https://www.standardmedia.co.ke"],
   ["Capital FM Business", "https://www.capitalfm.co.ke/business/feed/", "https://www.capitalfm.co.ke/business"],
@@ -247,7 +249,16 @@ export async function fetchRssItems(): Promise<RssItem[]> {
     }),
   );
 
-  return results
+  const items = results
     .filter((result): result is PromiseFulfilledResult<RssItem[]> => result.status === "fulfilled")
     .flatMap((result) => result.value);
+
+  /*
+   * Persist every fetched story. Once a story leaves the feed its URL would
+   * otherwise start 404ing, breaking links Google has already indexed.
+   * Throttled and failure-tolerant inside archiveRssItems.
+   */
+  await archiveRssItems(items);
+
+  return items;
 }

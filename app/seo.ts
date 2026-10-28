@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { fetchRssItems } from "./rss";
+import { loadArchivedRss, mergeWithArchive } from "./rss-store";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kdmbspupunfrwkvcosov.supabase.co";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbWJzcHVwdW5mcndrdmNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NjEzODQsImV4cCI6MjEwMzIzNzM4NH0.FG02U5z3cxdsdmEctL3HM1jmEjri-OQndFymfjhQ1NA";
@@ -84,7 +85,7 @@ async function getRssStories(): Promise<Story[]> {
   const stories: Story[] = await fetchRssItems();
 
   const seen = new Set<string>();
-  return stories
+  const live = stories
     .filter(hasImage)
     .filter((story) => {
       const key = story.guid || story.link || story.title;
@@ -92,6 +93,20 @@ async function getRssStories(): Promise<Story[]> {
       seen.add(String(key));
       return true;
     });
+
+  /*
+   * Older stories come from the archive so the sitemap and metadata keep
+   * listing article URLs that are no longer present in the live feeds.
+   */
+  /*
+   * Archived stories stay in the sitemap even without an image: their URLs
+   * resolve, so dropping them would remove pages Google already has.
+   */
+  const archived = await loadArchivedRss({ limit: 300 });
+
+  return mergeWithArchive(live, archived).sort(
+    (a, b) => new Date(b.pubDate || 0).getTime() - new Date(a.pubDate || 0).getTime(),
+  );
 }
 
 async function getCommunityStories(): Promise<Story[]> {

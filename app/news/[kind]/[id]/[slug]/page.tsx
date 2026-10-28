@@ -92,11 +92,29 @@ export default async function ArticlePage({
     isAccessibleForFree: true,
   };
 
+  /*
+   * Breadcrumb schema: helps Google render a trail under the result and
+   * lets AI crawlers place the article inside the site hierarchy.
+   */
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Newsight", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: author || "News", item: `${SITE_URL}/#kenya` },
+      { "@type": "ListItem", position: 3, name: title, item: canonical },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd).replace(/</g, "\\u003c") }}
       />
       <ArticleClient article={article} latestStories={latestStories} relatedStories={relatedStories} />
     </>

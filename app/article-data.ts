@@ -1,5 +1,6 @@
 
 import { fetchRssItems } from "./rss";
+import { findArchivedRss, loadArchivedRss, mergeWithArchive } from "./rss-store";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -88,15 +89,35 @@ async function loadRss(): Promise<Article[]> {
   }));
 
   const seen = new Set<string>();
-  return stories
+  const live = stories
     .filter((item) => hasImage(item))
     .filter((item) => {
       const key = item.guid || item.link || item.title;
       if (!key || seen.has(String(key))) return false;
       seen.add(String(key));
       return true;
-    })
-    .sort((a, b) => new Date(b.pubDate || 0).getTime() - new Date(a.pubDate || 0).getTime());
+    });
+
+  /*
+   * Stories that have rolled out of their feed come from the Supabase
+   * archive, so latest/related lists and old article URLs keep working.
+   * They get the same image filter as live stories: a few publishers
+   * (K24 Digital) ship no image in their feed, and without this filter
+   * every sidebar slot fills with the Newsight logo placeholder.
+   */
+  const archived = (await loadArchivedRss({ limit: 300 }))
+    .map((item) => ({
+      ...item,
+      id: rssId(item),
+      kind: "rss" as const,
+      originalUrl: item.link,
+      pubDate: item.pubDate || "",
+    }))
+    .filter((item) => hasImage(item));
+
+  return mergeWithArchive(live, archived).sort(
+    (a, b) => new Date(b.pubDate || 0).getTime() - new Date(a.pubDate || 0).getTime(),
+  );
 }
 
 async function loadCommunityArticle(id: string): Promise<Article | null> {
@@ -269,7 +290,23 @@ export async function findArticle(kind: string | undefined, id: string | undefin
   }
 
   const stories = await loadRss();
-  return stories.find((story) => rssId(story) === id) || null;
+  const fromFeeds = stories.find((story) => rssId(story) === id);
+  if (fromFeeds) return fromFeeds;
+
+  /*
+   * The story has left every feed. Pull it from the archive so a URL
+   * Google already indexed keeps returning the article instead of a 404.
+   */
+  const archived = await findArchivedRss(id);
+  if (!archived) return null;
+
+  return {
+    ...archived,
+    id,
+    kind: "rss" as const,
+    originalUrl: archived.link,
+    pubDate: archived.pubDate || "",
+  };
 }
 
 

@@ -3,16 +3,23 @@ import Script from "next/script";
 import { getHomeMetadata } from "./seo";
 import "./globals.css";
 
+/*
+ * Page-level SEO tags (title, description, canonical, robots, Open Graph,
+ * Twitter) come from Next's metadata system: getHomeMetadata() below for the
+ * homepage, overridden by each page's own generateMetadata (e.g. article
+ * pages emit their own canonical URL).
+ *
+ * They used to ALSO be written manually into this <head>, which put the
+ * homepage's tags - including `canonical = https://newsight.co.ke/` - on
+ * every article page. Two conflicting canonicals/titles per page told Google
+ * that all articles were duplicates of the homepage, so article URLs were
+ * barely indexed (12 indexed pages vs hundreds of stories).
+ */
 export async function generateMetadata(): Promise<Metadata> {
   return getHomeMetadata();
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const metadata = await getHomeMetadata();
-  const title = typeof metadata.title === "string" ? metadata.title : "Newsight - Kenya News & Latest Updates";
-  const description = metadata.description || "Stay informed with the latest news from Kenya and around the world.";
-  const og = metadata.openGraph;
-  const image = typeof og?.images?.[0] === "string" ? og.images[0] : og?.images?.[0]?.url || "https://newsight.co.ke/assets/logo/logo_icon.png";
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -37,23 +44,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en">
       <head>
-        {/* Explicit server-rendered tags: these are present in View Source / Ctrl+U. */}
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{title}</title>
-        <meta name="description" content={description} />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={image} />
-        <meta property="og:url" content="https://newsight.co.ke/" />
-        <meta property="og:site_name" content="Newsight" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content={image} />
-        <link rel="canonical" href="https://newsight.co.ke/" />
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        {/* Site-wide structured data only; per-page tags are rendered by Next. */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
         <link rel="icon" href="https://newsight.co.ke/assets/logo/logo_icon.png" />
         <Script

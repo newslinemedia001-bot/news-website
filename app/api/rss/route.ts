@@ -1,4 +1,5 @@
 import { fetchRssItems } from "../../rss";
+import { loadArchivedRss, mergeWithArchive } from "../../rss-store";
 
 /*
  * Serves parsed RSS stories to the legacy browser scripts
@@ -10,7 +11,14 @@ export const revalidate = 300;
 
 export async function GET() {
   try {
-    const items = await fetchRssItems();
+    const live = await fetchRssItems();
+
+    /*
+     * Archived stories fill the gaps the live feeds no longer cover, so
+     * homepage grids keep rendering stories whose feed slot has rolled over.
+     */
+    const archived = await loadArchivedRss({ limit: 300 });
+    const items = mergeWithArchive(live, archived);
 
     if (!items.length) {
       return Response.json({ status: "error", items: [] }, { status: 502 });
